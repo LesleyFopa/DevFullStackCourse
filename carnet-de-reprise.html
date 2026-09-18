@@ -1,0 +1,590 @@
+<title>Carnet de Reprise</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1b1a17;
+      --surface: #242220;
+      --surface-alt: #2c2a26;
+      --surface-raised: #29271f;
+      --ink: #ece7db;
+      --text: #d8d2c2;
+      --muted: #a89f8c;
+      --accent: #d9a44a;
+      --accent-ink: #241a06;
+      --accent-2: #6fb0a1;
+      --success: #7fb56f;
+      --success-bg: #26301f;
+      --warning: #d97a52;
+      --warning-bg: #332119;
+      --border: #3a3733;
+      --shadow: rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1b1a17;
+    --surface: #242220;
+    --surface-alt: #2c2a26;
+    --surface-raised: #29271f;
+    --ink: #ece7db;
+    --text: #d8d2c2;
+    --muted: #a89f8c;
+    --accent: #d9a44a;
+    --accent-ink: #241a06;
+    --accent-2: #6fb0a1;
+    --success: #7fb56f;
+    --success-bg: #26301f;
+    --warning: #d97a52;
+    --warning-bg: #332119;
+    --border: #3a3733;
+    --shadow: rgba(0,0,0,0.35);
+  }
+  :root {
+    --bg: #f2efe6;
+    --surface: #fdfbf6;
+    --surface-alt: #eae4d4;
+    --surface-raised: #ffffff;
+    --ink: #22314a;
+    --text: #332f27;
+    --muted: #7c7462;
+    --accent: #b6812c;
+    --accent-ink: #ffffff;
+    --accent-2: #3f7d6e;
+    --success: #4a7c47;
+    --success-bg: #e4ecdf;
+    --warning: #b3532e;
+    --warning-bg: #f5e4da;
+    --border: #ddd4bc;
+    --shadow: rgba(60,50,20,0.10);
+
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent-2); }
+
+  .app {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .rail {
+    background: var(--surface-alt);
+    border-right: 1px solid var(--border);
+    padding: 28px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .rail-title {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    color: var(--ink);
+    margin: 0 8px 4px;
+    text-wrap: balance;
+  }
+  .rail-sub {
+    margin: 0 8px 22px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 10px;
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .nav-btn:hover { background: var(--surface); }
+  .nav-btn.active { background: var(--surface-raised); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px var(--shadow); }
+  .nav-btn:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+  .nav-dot {
+    flex: 0 0 auto;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: grid; place-items: center;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .nav-dot.done { background: var(--success); border-color: var(--success); color: var(--success-bg); }
+  .nav-dot.partial { border-color: var(--accent); color: var(--accent); }
+  .nav-label { flex: 1; }
+  .nav-count { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .rail-foot {
+    margin-top: auto;
+    padding: 14px 10px 0;
+    border-top: 1px solid var(--border);
+  }
+  .rail-progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 0.72rem; color: var(--muted); margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .bar { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s ease; }
+
+  /* ---------- Main ---------- */
+  main { padding: 40px 48px 80px; max-width: 880px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-family: var(--serif);
+    color: var(--ink);
+    font-size: 2rem;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .lede {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 62ch;
+    margin: 0 0 28px;
+  }
+
+  .meta-row { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 30px; }
+  .meta-item { min-width: 200px; }
+  .meta-item h3 {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 5px;
+    font-weight: 600;
+  }
+  .meta-item p { margin: 0; color: var(--text); font-size: 0.94rem; }
+
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+    transition: border-color .15s ease;
+  }
+  .day-card:has(.chk:checked) { border-color: var(--success); background: var(--success-bg); }
+
+  .chk-wrap { padding-top: 2px; }
+  .chk {
+    width: 20px; height: 20px;
+    accent-color: var(--success);
+    cursor: pointer;
+  }
+
+  .day-head {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .day-num {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .day-title {
+    font-family: var(--serif);
+    font-size: 1.06rem;
+    color: var(--ink);
+    margin: 0;
+  }
+  .day-card:has(.chk:checked) .day-title { color: var(--success); }
+  .split {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    background: var(--surface-alt);
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .day-line { margin: 4px 0; font-size: 0.9rem; }
+  .day-line .k { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 6px; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 22px 0;
+    border: 1px solid var(--border);
+  }
+  .callout.project { background: var(--surface-raised); border-left: 4px solid var(--accent); }
+  .callout.revision { background: var(--warning-bg); border-left: 4px solid var(--warning); }
+  .callout h3 {
+    font-family: var(--sans);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 6px;
+    color: var(--muted);
+  }
+  .callout p { margin: 0; font-size: 0.94rem; }
+
+  /* ---------- Overview ---------- */
+  .ring-wrap { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+  .ring-stat { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .ring-stat .big { font-size: 2rem; color: var(--ink); font-family: var(--serif); }
+  .ring-stat .lbl { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+  .timeline { display: flex; flex-direction: column; gap: 10px; }
+  .tl-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 130px;
+    gap: 16px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--sans);
+    color: var(--text);
+  }
+  .tl-row:hover { border-color: var(--accent-2); }
+  .tl-week { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tl-theme { font-family: var(--serif); font-size: 1rem; color: var(--ink); }
+  .tl-goal { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .tl-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .tl-bar-wrap .bar { flex: 1; }
+  .tl-pct { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); width: 32px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .legend { font-size: 0.82rem; color: var(--muted); margin-top: 28px; }
+
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; }
+    .rail {
+      flex-direction: row;
+      overflow-x: auto;
+      padding: 14px 12px;
+      gap: 6px;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .rail-title, .rail-sub, .rail-foot { display: none; }
+    .nav-btn { flex: 0 0 auto; }
+    .nav-label { white-space: nowrap; }
+    main { padding: 26px 20px 60px; }
+    .tl-row { grid-template-columns: 1fr; text-align: left; }
+    .tl-bar-wrap { margin-top: 4px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar > span { transition: none; }
+  }
+</style>
+
+<div class="app">
+  <nav class="rail" id="rail">
+    <p class="rail-title">Carnet de reprise</p>
+    <p class="rail-sub">8 semaines &middot; niveau débutant</p>
+    <div id="navList"></div>
+    <div class="rail-foot">
+      <div class="rail-progress-label">
+        <span>Progression totale</span>
+        <span id="railPct">0%</span>
+      </div>
+      <div class="bar"><span id="railBar" style="width:0%"></span></div>
+    </div>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'carnet-reprise-progress-v1';
+
+  var weeks = [
+    {
+      id: 's1', theme: 'Fondations outils', goal: 'Naviguer et versionner sans aide',
+      objectif: 'Être capable de naviguer et gérer des fichiers en ligne de commande, et de versionner un projet avec Git/GitHub sans aide.',
+      prerequis: 'Aucun.',
+      days: [
+        { t: 'Linux : terminal et système de fichiers', split: '1h30 / 1h30', res: 'The Missing Semester (MIT), cours 1 & 2', ex: 'Recréer une arborescence de dossiers et manipuler 10 fichiers uniquement en ligne de commande.' },
+        { t: 'Linux : manipulation de fichiers et flux', split: '1h / 2h', res: 'OpenClassrooms — Reprenez le contrôle à l’aide de Linux', ex: 'Extraire des lignes précises d’un fichier texte avec grep et des pipes.' },
+        { t: 'Linux : éditeur en ligne de commande et variables d’environnement', split: '1h / 1h30', res: 'Doc officielle nano ou vim + doc variables d’environnement', ex: 'Écrire et exécuter un script shell de 10 lignes.' },
+        { t: 'Git : init, add, commit, diff, log', split: '1h / 2h', res: 'Learn Git Branching — séquence "Introduction"', ex: 'Construire un historique de 10 commits sur un projet test.' },
+        { t: 'Git : branches et fusion', split: '1h / 2h', res: 'Learn Git Branching — séquence "Branching in Git"', ex: 'Créer deux branches, provoquer un conflit, le résoudre.' },
+        { t: 'GitHub : dépôt distant, push/pull, README, .gitignore', split: '1h / 2h', res: 'Guide officiel GitHub "Hello World"', ex: 'Publier le projet test sur un repo GitHub public avec un README correct.' }
+      ],
+      revision: null,
+      project: 'Un repo GitHub public, structuré, avec README, historique de commits propre et au moins une branche fusionnée.'
+    },
+    {
+      id: 's2', theme: 'Python (bases)', goal: 'Scripts, fonctions, une classe',
+      objectif: 'Écrire des scripts Python avec structures de contrôle, fonctions, et une première classe.',
+      prerequis: 'Semaine 1.',
+      days: [
+        { t: 'Variables, types, opérateurs', split: '1h / 1h30', res: 'docs.python.org — tutoriel officiel, chapitre 3', ex: '10 petits exercices de calcul et de conversion.' },
+        { t: 'Structures de contrôle (if, boucles)', split: '1h / 2h', res: 'OpenClassrooms — Apprenez à programmer en Python', ex: 'FizzBuzz, puis le jeu du nombre mystère.' },
+        { t: 'Fonctions, listes et dictionnaires', split: '1h / 2h', res: 'OpenClassrooms — mêmes chapitres, fonctions & structures de données', ex: 'Script de gestion de contacts basé sur une liste de dictionnaires.' },
+        { t: 'Programmation orientée objet', split: '1h30 / 2h', res: 'Real Python — Object-Oriented Programming in Python 3', ex: 'Modéliser une classe Livre et une classe Bibliothèque.' },
+        { t: 'Gestion des erreurs et fichiers', split: '1h / 2h', res: 'docs.python.org — chapitres 7 et 8', ex: 'Sauvegarder et recharger la bibliothèque dans un fichier JSON.' },
+        { t: 'Consolidation Python', split: '30min / 2h30', res: '—', ex: 'Pousser le mini-projet sur GitHub avec un commit par fonctionnalité.' }
+      ],
+      revision: 'Refaire un cycle complet add → commit → push sur un projet test, sans notes.',
+      project: 'Application console de gestion de bibliothèque (ajout, suppression, recherche), persistée en JSON, versionnée sur GitHub.'
+    },
+    {
+      id: 's3', theme: 'SQL & bases de données', goal: 'Requêtes et connexion Python',
+      objectif: 'Écrire des requêtes SQL (SELECT, JOIN, GROUP BY) et connecter Python à une base PostgreSQL.',
+      prerequis: 'Semaine 2.',
+      days: [
+        { t: 'Modèle relationnel, création de tables', split: '1h / 1h30', res: 'SQLZoo — modules de base', ex: 'Modéliser les tables Livre, Auteur, Emprunt.' },
+        { t: 'SELECT, WHERE, tri, agrégats', split: '1h / 2h', res: 'SQLZoo — module SELECT', ex: '15 requêtes sur une base d’exemple.' },
+        { t: 'JOIN et GROUP BY', split: '1h / 2h', res: 'SQLZoo — module JOIN', ex: 'Requêtes multi-tables sur le modèle bibliothèque.' },
+        { t: 'Installer PostgreSQL en local', split: '1h / 1h30', res: 'Doc officielle PostgreSQL — Tutorial', ex: 'Recréer le schéma bibliothèque dans PostgreSQL.' },
+        { t: 'Connecter Python à PostgreSQL', split: '1h / 2h30', res: 'Doc officielle psycopg2 — Quick start', ex: 'Migrer l’appli console de la semaine 2 vers PostgreSQL.' },
+        { t: 'Consolidation SQL', split: '30min / 2h', res: '—', ex: 'Écrire 5 requêtes supplémentaires en autonomie complète.' }
+      ],
+      revision: 'Revoir les commandes Linux de manipulation de fichiers (cp, mv, grep, pipes).',
+      project: 'L’appli bibliothèque de la semaine 2, maintenant branchée sur une vraie base PostgreSQL.'
+    },
+    {
+      id: 's4', theme: 'Backend web — Django', goal: 'Une API REST testée',
+      objectif: 'Construire une API REST simple (CRUD) et la tester avec Postman.',
+      prerequis: 'Semaines 2 et 3.',
+      days: [
+        { t: 'Installation Django, structure d’un projet', split: '1h / 1h30', res: 'Tutoriel officiel Django, parties 1 et 2', ex: 'Page d’accueil et une route dynamique.' },
+        { t: 'Modèles Django (ORM) et migrations', split: '1h / 2h', res: 'Tutoriel officiel Django, partie 2 — modèles', ex: 'Modéliser Livre et Auteur via l’ORM Django.' },
+        { t: 'Introduction à Django REST Framework', split: '1h / 2h', res: 'Doc officielle DRF — Quickstart', ex: 'Exposer les livres en JSON via une première vue API.' },
+        { t: 'CRUD complet avec DRF', split: '1h / 2h30', res: 'Doc officielle DRF — Serializers et ViewSets', ex: 'API complète GET/POST/PUT/DELETE sur les livres.' },
+        { t: 'Tester l’API avec Postman', split: '1h / 1h30', res: 'Postman Learning Center', ex: 'Créer une collection Postman testant les 4 opérations CRUD.' },
+        { t: 'Consolidation Django', split: '30min / 2h', res: '—', ex: 'Ajouter une règle métier (empêcher un emprunt si le livre est indisponible).' }
+      ],
+      revision: 'Revoir la programmation orientée objet en Python (classes, héritage).',
+      project: 'Une API Django REST fonctionnelle (livres, emprunts) testée intégralement dans Postman.'
+    },
+    {
+      id: 's5', theme: 'Frontend — JavaScript & React', goal: 'Une interface branchée sur l’API',
+      objectif: 'Construire une interface React qui consomme l’API Django.',
+      prerequis: 'Semaine 4, notions HTML/CSS de base.',
+      days: [
+        { t: 'JavaScript : variables, fonctions, DOM', split: '1h / 2h', res: 'JavaScript.info, chapitres 1 à "Document"', ex: 'Page statique avec compteur et affichage conditionnel.' },
+        { t: 'JavaScript : fetch, promesses, async/await', split: '1h / 2h', res: 'MDN "Using Fetch" + JavaScript.info async', ex: 'Appeler l’API Django et afficher les données en console.' },
+        { t: 'React : composants, JSX, props', split: '1h / 2h', res: 'react.dev — Quick Start et Tic-Tac-Toe', ex: 'Composant CarteLivre réutilisable.' },
+        { t: 'React : state et hooks', split: '1h / 2h30', res: 'react.dev — "State: A Component’s Memory"', ex: 'Liste de livres chargée dynamiquement via useEffect.' },
+        { t: 'Formulaires et appels API depuis React', split: '1h / 2h30', res: 'react.dev — "Responding to Events"', ex: 'Formulaire d’ajout de livre relié à l’API Django.' },
+        { t: 'Consolidation React', split: '30min / 2h', res: '—', ex: 'Gérer les cas d’erreur (livre introuvable, erreur réseau).' }
+      ],
+      revision: 'Refaire trois requêtes SQL avec JOIN, de mémoire.',
+      project: 'Interface React complète (liste, ajout, suppression) branchée sur l’API Django de la semaine 4.'
+    },
+    {
+      id: 's6', theme: 'Java & Spring Boot', goal: 'Transposer les acquis en Java',
+      objectif: 'Transposer les acquis Python/Django vers Java/Spring Boot.',
+      prerequis: 'Semaine 2 (POO) et semaine 4 (notion d’API REST).',
+      days: [
+        { t: 'Syntaxe Java et typage fort', split: '1h / 2h', res: 'OpenClassrooms — Apprenez à programmer en Java', ex: 'Réécrire en Java trois exercices déjà faits en Python.' },
+        { t: 'POO en Java (héritage, interfaces)', split: '1h / 2h', res: 'Oracle — The Java Tutorials, OOP Concepts', ex: 'Modéliser Livre et Auteur en Java.' },
+        { t: 'Spring Initializr, structure d’un projet Spring Boot', split: '1h / 1h30', res: 'Guide officiel Spring — Building a RESTful Web Service', ex: 'Premier contrôleur REST "Hello World".' },
+        { t: 'Spring Data JPA : entités et repositories', split: '1h / 2h30', res: 'Guide officiel Spring — Accessing Data with JPA', ex: 'Entité Livre persistée, d’abord en H2 puis en PostgreSQL.' },
+        { t: 'Contrôleurs REST complets (CRUD)', split: '1h / 2h30', res: 'Guides officiels Spring — REST service', ex: 'Reproduire l’API livres déjà faite en Django, cette fois en Spring Boot.' },
+        { t: 'Comparaison Django vs Spring Boot', split: '1h / 1h30', res: '—', ex: 'Tester l’API Spring Boot dans Postman et noter les différences avec Django.' }
+      ],
+      revision: 'Retester dans Postman une collection déjà créée en semaine 4.',
+      project: 'La même API CRUD livres, réimplémentée en Java/Spring Boot, testée dans Postman.'
+    },
+    {
+      id: 's7', theme: 'Cloud, déploiement & sécurité', goal: 'Une app en ligne, sécurisée',
+      objectif: 'Déployer une application complète en ligne et appliquer des bonnes pratiques de sécurité de base.',
+      prerequis: 'Semaines 4 et 5 (une app front + back fonctionnelle).',
+      days: [
+        { t: 'Virtualisation et conteneurs (VM vs Docker)', split: '1h / 1h30', res: 'Docker — Get Started (doc officielle)', ex: 'Installer Docker et lancer un premier conteneur.' },
+        { t: 'Conteneuriser l’API Django', split: '1h / 2h', res: 'Docker — Quickstart: Compose and Django', ex: 'Écrire un Dockerfile fonctionnel pour l’API.' },
+        { t: 'Introduction au cloud et déploiement (PaaS)', split: '1h / 2h', res: 'Doc officielle Render ou Railway', ex: 'Déployer l’API Django en ligne.' },
+        { t: 'Déployer le frontend React', split: '1h / 1h30', res: 'Doc officielle Vercel — Deploying', ex: 'Frontend accessible publiquement et connecté à l’API déployée.' },
+        { t: 'Sécurité opérationnelle : secrets et OWASP Top 10', split: '1h30 / 1h30', res: 'OWASP Top 10 (document officiel)', ex: 'Auditer son projet (secrets en clair, CORS trop ouvert) et corriger.' },
+        { t: 'Nettoyage final du dépôt', split: '30min / 2h', res: '—', ex: 'README complet, secrets exclus via .gitignore, historique Git relu.' }
+      ],
+      revision: 'Vérifier que le .env n’a jamais été commité, sur tout l’historique du repo.',
+      project: 'L’application complète (front, API, base de données) accessible via une URL publique, dépôt GitHub propre.'
+    },
+    {
+      id: 's8', theme: 'Consolidation & aperçu théorique', goal: 'Portfolio prêt, bases posées',
+      objectif: 'Consolider les acquis des 7 semaines et ne pas arriver vierge sur les matières non pratiquées.',
+      prerequis: 'Semaines 1 à 7.',
+      days: [
+        { t: 'Révision libre ciblée sur le point le plus faible', split: '1h / 2h', res: 'Ressources des semaines précédentes', ex: 'Refaire l’exercice le moins réussi du parcours.' },
+        { t: 'Finalisation du projet fil rouge', split: '30min / 3h', res: '—', ex: 'Polish, gestion d’erreurs, README détaillé avec captures.' },
+        { t: 'Survol réseaux et infrastructure', split: '1h30 / —', res: 'Cisco Networking Basics (cours gratuit) ou vidéos de vulgarisation', ex: 'Connaître IP, DNS, HTTP/HTTPS, ports — vocabulaire, pas de pratique.' },
+        { t: 'Survol cryptographie et sécurité organisationnelle', split: '1h30 / —', res: 'Cryptography I, Dan Boneh, Coursera (audit gratuit, premières leçons)', ex: 'Comprendre chiffrement symétrique/asymétrique et hashing.' },
+        { t: 'Survol intelligence artificielle et informatique quantique', split: '1h30 / —', res: 'Elements of AI (Univ. Helsinki, gratuit) + vidéo de vulgarisation quantique', ex: 'Vocabulaire clé des deux domaines.' },
+        { t: 'Bilan complet du parcours', split: '1h / 1h30', res: '—', ex: 'Relire le parcours, lister les points à approfondir en cours, mettre à jour le portfolio.' }
+      ],
+      revision: 'Cycle complet : Git, une requête SQL avec JOIN, un endpoint testé dans Postman.',
+      project: 'Portfolio GitHub avec le projet complet (Python/Django/PostgreSQL, React, Java/Spring Boot en bonus, déployé) prêt à montrer.'
+    }
+  ];
+
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch (e) { state = {}; }
+  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+  function dayKey(wi, di) { return weeks[wi].id + '-d' + di; }
+
+  function weekCounts(wi) {
+    var w = weeks[wi];
+    var total = w.days.length;
+    var done = 0;
+    for (var i = 0; i < total; i++) if (state[dayKey(wi, i)]) done++;
+    return { done: done, total: total };
+  }
+
+  function totalCounts() {
+    var done = 0, total = 0;
+    for (var wi = 0; wi < weeks.length; wi++) {
+      var c = weekCounts(wi);
+      done += c.done; total += c.total;
+    }
+    return { done: done, total: total };
+  }
+
+  var current = 'overview';
+
+  function render() {
+    renderNav();
+    if (current === 'overview') renderOverview();
+    else renderWeek(weeks.findIndex(function (w) { return w.id === current; }));
+    var t = totalCounts();
+    var pct = t.total ? Math.round(100 * t.done / t.total) : 0;
+    document.getElementById('railPct').textContent = pct + '%';
+    document.getElementById('railBar').style.width = pct + '%';
+  }
+
+  function renderNav() {
+    var el = document.getElementById('navList');
+    var html = '';
+    html += '<button class="nav-btn' + (current === 'overview' ? ' active' : '') + '" data-nav="overview">' +
+      '<span class="nav-dot">&#9673;</span><span class="nav-label">Vue d’ensemble</span></button>';
+    weeks.forEach(function (w, wi) {
+      var c = weekCounts(wi);
+      var dotClass = c.done === c.total ? 'done' : (c.done > 0 ? 'partial' : '');
+      html += '<button class="nav-btn' + (current === w.id ? ' active' : '') + '" data-nav="' + w.id + '">' +
+        '<span class="nav-dot ' + dotClass + '">' + (c.done === c.total ? '&#10003;' : (wi + 1)) + '</span>' +
+        '<span class="nav-label">Semaine ' + (wi + 1) + '</span>' +
+        '<span class="nav-count">' + c.done + '/' + c.total + '</span></button>';
+    });
+    el.innerHTML = html;
+    el.querySelectorAll('[data-nav]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        current = btn.getAttribute('data-nav');
+        render();
+        document.getElementById('main').scrollTo(0, 0);
+        window.scrollTo(0, 0);
+      });
+    });
+  }
+
+  function renderOverview() {
+    var t = totalCounts();
+    var pct = t.total ? Math.round(100 * t.done / t.total) : 0;
+    var html = '';
+    html += '<p class="eyebrow">Plan de reprise &middot; 8 semaines</p>';
+    html += '<h1>Vue d’ensemble</h1>';
+    html += '<p class="lede">Le calendrier complet, semaine par semaine. Clique sur une ligne pour voir le détail jour par jour, les ressources et l’exercice associé.</p>';
+    html += '<div class="ring-wrap">' +
+      '<div class="ring-stat"><div class="big">' + pct + '%</div><div class="lbl">Avancement global</div></div>' +
+      '<div class="ring-stat"><div class="big">' + t.done + '&#8202;/&#8202;' + t.total + '</div><div class="lbl">Journées cochées</div></div>' +
+      '</div>';
+    html += '<div class="timeline">';
+    weeks.forEach(function (w, wi) {
+      var c = weekCounts(wi);
+      var p = c.total ? Math.round(100 * c.done / c.total) : 0;
+      html += '<button class="tl-row" data-nav="' + w.id + '">' +
+        '<span class="tl-week">SEM. ' + (wi + 1) + '</span>' +
+        '<span><span class="tl-theme">' + w.theme + '</span><div class="tl-goal">' + w.goal + '</div></span>' +
+        '<span class="tl-bar-wrap"><span class="bar"><span style="width:' + p + '%"></span></span><span class="tl-pct">' + p + '%</span></span>' +
+        '</button>';
+    });
+    html += '</div>';
+    html += '<p class="legend">Chaque semaine compte 6 jours de travail : environ 3 à 4h par jour (théorie + pratique), plus un créneau de révision en spirale sur les semaines précédentes.</p>';
+    document.getElementById('main').innerHTML = html;
+    document.querySelectorAll('.tl-row').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        current = btn.getAttribute('data-nav');
+        render();
+        window.scrollTo(0, 0);
+      });
+    });
+  }
+
+  function renderWeek(wi) {
+    var w = weeks[wi];
+    var c = weekCounts(wi);
+    var html = '';
+    html += '<p class="eyebrow">Semaine ' + (wi + 1) + ' / 8</p>';
+    html += '<h1>' + w.theme + '</h1>';
+    html += '<p class="lede">' + w.objectif + '</p>';
+    html += '<div class="meta-row">' +
+      '<div class="meta-item"><h3>Prérequis</h3><p>' + w.prerequis + '</p></div>' +
+      '<div class="meta-item"><h3>Avancement</h3><p>' + c.done + ' / ' + c.total + ' journées cochées</p></div>' +
+      '</div>';
+
+    w.days.forEach(function (d, di) {
+      var key = dayKey(wi, di);
+      var checked = !!state[key];
+      html += '<div class="day-card">' +
+        '<div class="chk-wrap"><input type="checkbox" class="chk" data-key="' + key + '" ' + (checked ? 'checked' : '') + ' aria-label="Marquer comme fait : ' + d.t.replace(/"/g, '&quot;') + '"></div>' +
+        '<div>' +
+          '<div class="day-head"><span class="day-num">JOUR ' + (di + 1) + '</span><h4 class="day-title">' + d.t + '</h4><span class="split">' + d.split + '</span></div>' +
+          '<p class="day-line"><span class="k">Ressource</span>' + d.res + '</p>' +
+          '<p class="day-line"><span class="k">Exercice</span>' + d.ex + '</p>' +
+        '</div>' +
+      '</div>';
+    });
+
+    if (w.revision) {
+      html += '<div class="callout revision"><h3>Révision spirale</h3><p>' + w.revision + '</p></div>';
+    }
+    html += '<div class="callout project"><h3>Mini-projet de la semaine</h3><p>' + w.project + '</p></div>';
+
+    document.getElementById('main').innerHTML = html;
+    document.querySelectorAll('.chk').forEach(function (box) {
+      box.addEventListener('change', function () {
+        state[box.getAttribute('data-key')] = box.checked;
+        save();
+        render();
+      });
+    });
+  }
+
+  render();
+})();
+</script>
