@@ -1,0 +1,257 @@
+<title>Carnet de Reprise — Admin</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1b1a17; --surface: #242220; --surface-alt: #2c2a26; --surface-raised: #29271f;
+      --ink: #ece7db; --text: #d8d2c2; --muted: #a89f8c;
+      --accent: #d9a44a; --accent-ink: #241a06; --accent-2: #6fb0a1;
+      --success: #7fb56f; --success-bg: #26301f; --warning: #d97a52; --warning-bg: #332119;
+      --border: #3a3733; --shadow: rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1b1a17; --surface: #242220; --surface-alt: #2c2a26; --surface-raised: #29271f;
+    --ink: #ece7db; --text: #d8d2c2; --muted: #a89f8c;
+    --accent: #d9a44a; --accent-ink: #241a06; --accent-2: #6fb0a1;
+    --success: #7fb56f; --success-bg: #26301f; --warning: #d97a52; --warning-bg: #332119;
+    --border: #3a3733; --shadow: rgba(0,0,0,0.35);
+  }
+  :root {
+    --bg: #f2efe6; --surface: #fdfbf6; --surface-alt: #eae4d4; --surface-raised: #ffffff;
+    --ink: #22314a; --text: #332f27; --muted: #7c7462;
+    --accent: #b6812c; --accent-ink: #ffffff; --accent-2: #3f7d6e;
+    --success: #4a7c47; --success-bg: #e4ecdf; --warning: #b3532e; --warning-bg: #f5e4da;
+    --border: #ddd4bc; --shadow: rgba(60,50,20,0.10);
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  .center-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-card {
+    background: var(--surface-raised); border: 1px solid var(--border); border-radius: 12px;
+    padding: 32px 28px; max-width: 360px; width: 100%; box-shadow: 0 12px 32px var(--shadow);
+  }
+  .login-card .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); margin: 0 0 8px; }
+  .login-card h1 { font-family: var(--serif); color: var(--ink); font-size: 1.5rem; margin: 0 0 18px; }
+  .login-card label { display: block; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 5px; }
+  .login-card input {
+    width: 100%; font-family: var(--sans); font-size: 0.95rem; padding: 10px 12px;
+    border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); margin-bottom: 14px;
+  }
+  .login-card button {
+    width: 100%; font-family: var(--sans); font-weight: 600; font-size: 0.92rem; padding: 11px 12px;
+    border-radius: 8px; border: none; background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  }
+  .login-card button:disabled { opacity: 0.55; cursor: default; }
+  .form-error { color: var(--warning); font-size: 0.84rem; margin: 0 0 12px; }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+  .topbar { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); margin: 0 0 8px; }
+  h1 { font-family: var(--serif); color: var(--ink); font-size: 1.9rem; margin: 0; text-wrap: balance; }
+  .logout-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: var(--sans); font-size: 0.82rem; padding: 7px 14px; border-radius: 20px; cursor: pointer; }
+  .logout-btn:hover { border-color: var(--accent-2); color: var(--accent-2); }
+
+  .stat-row { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 30px; }
+  .stat { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .stat .big { font-size: 1.9rem; color: var(--ink); font-family: var(--serif); }
+  .stat .lbl { font-size: 0.76rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+  table { width: 100%; border-collapse: collapse; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 12px 16px; background: var(--surface-alt); white-space: nowrap; }
+  td { padding: 14px 16px; border-top: 1px solid var(--border); font-size: 0.92rem; vertical-align: middle; }
+  tr.student-row { cursor: pointer; }
+  tr.student-row:hover td { background: var(--surface); }
+  .name-cell { font-family: var(--serif); color: var(--ink); font-size: 1rem; }
+  .bar { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; width: 140px; }
+  .bar > span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .pct-cell { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--muted); }
+  .stale { color: var(--warning); }
+  .detail-row td { background: var(--surface-alt); padding: 18px 20px; }
+  .week-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .week-mini { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .week-mini .wt { font-family: var(--serif); color: var(--ink); font-size: 0.86rem; margin-bottom: 6px; }
+  .week-mini .bar { width: 100%; margin-bottom: 4px; }
+  .week-mini .wn { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); font-size: 0.92rem; padding: 30px; text-align: center; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var WEEKS = [
+    { id: 's1', theme: 'Fondations outils' },
+    { id: 's2', theme: 'Python (bases)' },
+    { id: 's3', theme: 'SQL & bases de données' },
+    { id: 's4', theme: 'Backend web — Django' },
+    { id: 's5', theme: 'Frontend — JS & React' },
+    { id: 's6', theme: 'Java & Spring Boot' },
+    { id: 's7', theme: 'Cloud, déploiement & sécurité' },
+    { id: 's8', theme: 'Consolidation & aperçu' }
+  ];
+  var DAYS_PER_WEEK = 6;
+  var TOTAL_DAYS = WEEKS.length * DAYS_PER_WEEK;
+
+  function renderLogin(errorMsg) {
+    var app = document.getElementById('app');
+    app.innerHTML =
+      '<div class="center-screen"><div class="login-card">' +
+        '<p class="eyebrow">Carnet de reprise</p>' +
+        '<h1>Accès admin</h1>' +
+        (errorMsg ? '<p class="form-error">' + errorMsg + '</p>' : '') +
+        '<label for="email">E-mail</label>' +
+        '<input type="email" id="email" autocomplete="username">' +
+        '<label for="pwd">Mot de passe</label>' +
+        '<input type="password" id="pwd" autocomplete="current-password">' +
+        '<button id="loginBtn">Se connecter</button>' +
+      '</div></div>';
+    document.getElementById('loginBtn').addEventListener('click', doLogin);
+    document.getElementById('pwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  }
+
+  async function doLogin() {
+    var email = document.getElementById('email').value.trim();
+    var pwd = document.getElementById('pwd').value;
+    var btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Connexion…';
+    var res = await sb.auth.signInWithPassword({ email: email, password: pwd });
+    if (res.error) {
+      renderLogin('Identifiants incorrects.');
+      return;
+    }
+    loadDashboard();
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return 'Jamais';
+    var diffMs = Date.now() - new Date(iso).getTime();
+    var mins = Math.floor(diffMs / 60000);
+    if (mins < 60) return mins <= 1 ? 'À l’instant' : mins + ' min';
+    var hours = Math.floor(mins / 60);
+    if (hours < 24) return hours + ' h';
+    var days = Math.floor(hours / 24);
+    if (days < 30) return days + ' j';
+    return Math.floor(days / 30) + ' mois';
+  }
+
+  function weekIndexOf(dayKey) {
+    var wid = dayKey.split('-')[0];
+    for (var i = 0; i < WEEKS.length; i++) if (WEEKS[i].id === wid) return i;
+    return -1;
+  }
+
+  async function loadDashboard() {
+    var app = document.getElementById('app');
+    app.innerHTML = '<div class="wrap"><p class="empty">Chargement…</p></div>';
+
+    var studentsRes = await sb.from('students').select('id, name, created_at').order('name');
+    var progressRes = await sb.from('progress').select('student_id, day_key, checked, updated_at');
+
+    if (studentsRes.error || progressRes.error) {
+      app.innerHTML = '<div class="wrap"><p class="empty">Accès refusé ou erreur de connexion à la base. Vérifie que ce compte est bien l’admin.</p></div>';
+      return;
+    }
+
+    var students = studentsRes.data || [];
+    var progress = progressRes.data || [];
+
+    var byStudent = {};
+    students.forEach(function (s) {
+      byStudent[s.id] = { name: s.name, checked: 0, lastActivity: null, weeks: WEEKS.map(function () { return 0; }) };
+    });
+    progress.forEach(function (row) {
+      var entry = byStudent[row.student_id];
+      if (!entry) return;
+      if (row.checked) {
+        entry.checked++;
+        var wi = weekIndexOf(row.day_key);
+        if (wi >= 0) entry.weeks[wi]++;
+      }
+      if (!entry.lastActivity || new Date(row.updated_at) > new Date(entry.lastActivity)) {
+        entry.lastActivity = row.updated_at;
+      }
+    });
+
+    var rows = Object.keys(byStudent).map(function (id) {
+      var e = byStudent[id];
+      return { id: id, name: e.name, checked: e.checked, pct: Math.round(100 * e.checked / TOTAL_DAYS), lastActivity: e.lastActivity, weeks: e.weeks };
+    });
+    rows.sort(function (a, b) {
+      var at = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
+      var bt = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
+      return at - bt;
+    });
+
+    var avgPct = rows.length ? Math.round(rows.reduce(function (s, r) { return s + r.pct; }, 0) / rows.length) : 0;
+
+    var html = '<div class="wrap">';
+    html += '<div class="topbar"><div><p class="eyebrow">Carnet de reprise</p><h1>Suivi des étudiants</h1></div>' +
+      '<button class="logout-btn" id="logoutBtn">Se déconnecter</button></div>';
+    html += '<div class="stat-row">' +
+      '<div class="stat"><div class="big">' + rows.length + '</div><div class="lbl">Étudiants suivis</div></div>' +
+      '<div class="stat"><div class="big">' + avgPct + '%</div><div class="lbl">Avancement moyen</div></div>' +
+      '</div>';
+
+    if (!rows.length) {
+      html += '<p class="empty">Aucun étudiant n’a encore ouvert le carnet de reprise.</p>';
+    } else {
+      html += '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Étudiant</th><th>Avancement</th><th>Dernière activité</th>' +
+        '</tr></thead><tbody>';
+      rows.forEach(function (r, i) {
+        var stale = !r.lastActivity || (Date.now() - new Date(r.lastActivity).getTime()) > 5 * 24 * 3600 * 1000;
+        html += '<tr class="student-row" data-idx="' + i + '">' +
+          '<td class="name-cell">' + r.name + '</td>' +
+          '<td><div class="pct-cell"><span class="bar"><span style="width:' + r.pct + '%"></span></span>' + r.pct + '%</div></td>' +
+          '<td class="' + (stale ? 'stale' : '') + '">' + timeAgo(r.lastActivity) + '</td>' +
+          '</tr>' +
+          '<tr class="detail-row" id="detail-' + i + '" style="display:none"><td colspan="3">' +
+            '<div class="week-grid">' + WEEKS.map(function (w, wi) {
+              var wp = Math.round(100 * r.weeks[wi] / DAYS_PER_WEEK);
+              return '<div class="week-mini"><div class="wt">' + w.theme + '</div>' +
+                '<span class="bar"><span style="width:' + wp + '%"></span></span>' +
+                '<div class="wn">' + r.weeks[wi] + ' / ' + DAYS_PER_WEEK + ' jours</div></div>';
+            }).join('') + '</div>' +
+          '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+
+    app.innerHTML = html;
+    document.getElementById('logoutBtn').addEventListener('click', async function () {
+      await sb.auth.signOut();
+      renderLogin();
+    });
+    document.querySelectorAll('.student-row').forEach(function (tr) {
+      tr.addEventListener('click', function () {
+        var d = document.getElementById('detail-' + tr.getAttribute('data-idx'));
+        d.style.display = d.style.display === 'none' ? 'table-row' : 'none';
+      });
+    });
+  }
+
+  async function boot() {
+    var sessionRes = await sb.auth.getSession();
+    if (sessionRes.data.session && !sessionRes.data.session.user.is_anonymous) {
+      loadDashboard();
+    } else {
+      renderLogin();
+    }
+  }
+
+  boot();
+})();
+</script>

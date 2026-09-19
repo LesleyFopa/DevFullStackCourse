@@ -308,6 +308,63 @@
   @media (prefers-reduced-motion: reduce) {
     .bar > span { transition: none; }
   }
+
+  /* ---------- Name modal & sync status ---------- */
+  .modal-veil {
+    position: fixed; inset: 0;
+    background: rgba(20, 18, 12, 0.45);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 50;
+  }
+  .modal-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 26px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 12px 32px var(--shadow);
+  }
+  .modal-card h2 {
+    font-family: var(--serif);
+    color: var(--ink);
+    font-size: 1.3rem;
+    margin: 0 0 8px;
+  }
+  .modal-card p { color: var(--muted); font-size: 0.9rem; margin: 0 0 18px; }
+  .modal-card input[type="text"] {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+  .modal-card button {
+    width: 100%;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+  }
+  .modal-card button:disabled { opacity: 0.55; cursor: default; }
+  .modal-error { color: var(--warning); font-size: 0.82rem; margin: 0 0 12px; }
+
+  .sync-row {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 0.75rem; color: var(--muted);
+    padding: 0 10px 12px;
+  }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex: 0 0 auto; }
+  .sync-dot.off { background: var(--warning); }
 </style>
 
 <div class="app">
@@ -316,6 +373,7 @@
     <p class="rail-sub">8 semaines &middot; niveau débutant</p>
     <div id="navList"></div>
     <div class="rail-foot">
+      <div class="sync-row"><span class="sync-dot off" id="syncDot"></span><span id="syncLabel">Connexion…</span></div>
       <div class="rail-progress-label">
         <span>Progression totale</span>
         <span id="railPct">0%</span>
@@ -326,9 +384,14 @@
   <main id="main"></main>
 </div>
 
+<div id="modalHost"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <script>
 (function () {
-  var STORAGE_KEY = 'carnet-reprise-progress-v1';
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var studentId = null;
 
   var weeks = [
     {
@@ -454,10 +517,83 @@
   ];
 
   var state = {};
-  try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch (e) { state = {}; }
-  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
 
   function dayKey(wi, di) { return weeks[wi].id + '-d' + di; }
+
+  function setSync(ok, label) {
+    document.getElementById('syncDot').classList.toggle('off', !ok);
+    document.getElementById('syncLabel').textContent = label;
+  }
+
+  async function saveDay(key, checked) {
+    setSync(false, 'Enregistrement…');
+    var row = {
+      student_id: studentId,
+      day_key: key,
+      checked: checked,
+      checked_at: checked ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
+    };
+    var res = await sb.from('progress').upsert(row, { onConflict: 'student_id,day_key' });
+    if (res.error) {
+      setSync(false, 'Hors ligne — réessaie');
+    } else {
+      setSync(true, 'Synchronisé');
+    }
+  }
+
+  function askName() {
+    return new Promise(function (resolve) {
+      var host = document.getElementById('modalHost');
+      host.innerHTML =
+        '<div class="modal-veil"><div class="modal-card">' +
+          '<h2>Bienvenue dans le carnet de reprise</h2>' +
+          '<p>Indique ton prénom pour que ta progression soit suivie sur le tableau de bord.</p>' +
+          '<p class="modal-error" id="modalError" style="display:none"></p>' +
+          '<input type="text" id="nameInput" placeholder="Ton prénom" autocomplete="off">' +
+          '<button id="nameSubmit">Commencer</button>' +
+        '</div></div>';
+      var input = document.getElementById('nameInput');
+      var err = document.getElementById('modalError');
+      var btn = document.getElementById('nameSubmit');
+      input.focus();
+      function submit() {
+        var v = input.value.trim();
+        if (!v) { err.textContent = 'Merci d’indiquer un prénom.'; err.style.display = 'block'; return; }
+        btn.disabled = true;
+        resolve(v);
+      }
+      btn.addEventListener('click', submit);
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+    });
+  }
+
+  async function init() {
+    setSync(false, 'Connexion…');
+    var sessionRes = await sb.auth.getSession();
+    var session = sessionRes.data.session;
+    if (!session) {
+      var signInRes = await sb.auth.signInAnonymously();
+      if (signInRes.error) { setSync(false, 'Connexion impossible'); return; }
+      session = signInRes.data.session;
+    }
+    studentId = session.user.id;
+
+    var profileRes = await sb.from('students').select('name').eq('id', studentId).maybeSingle();
+    if (!profileRes.data) {
+      var name = await askName();
+      document.getElementById('modalHost').innerHTML = '';
+      await sb.from('students').insert({ id: studentId, name: name });
+    }
+
+    var progressRes = await sb.from('progress').select('day_key, checked').eq('student_id', studentId);
+    (progressRes.data || []).forEach(function (row) {
+      state[row.day_key] = row.checked;
+    });
+
+    setSync(true, 'Synchronisé');
+    render();
+  }
 
   function weekCounts(wi) {
     var w = weeks[wi];
@@ -578,13 +714,14 @@
     document.getElementById('main').innerHTML = html;
     document.querySelectorAll('.chk').forEach(function (box) {
       box.addEventListener('change', function () {
-        state[box.getAttribute('data-key')] = box.checked;
-        save();
+        var key = box.getAttribute('data-key');
+        state[key] = box.checked;
         render();
+        saveDay(key, box.checked);
       });
     });
   }
 
-  render();
+  init();
 })();
 </script>
