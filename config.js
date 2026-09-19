@@ -2,5 +2,5 @@
 // Project Settings > API dans le dashboard Supabase.
 // La clé "anon" est publique par conception (elle est protégée par les
 // règles RLS définies dans supabase/schema.sql) : pas besoin de la cacher.
-const SUPABASE_URL = "À_REMPLACER_PROJECT_URL";
-const SUPABASE_ANON_KEY = "À_REMPLACER_ANON_KEY";
+const SUPABASE_URL = "https://hgnxctarjuguztavldyo.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_md0S40voTuWHRK0Vr9Rpng_vuz5nk3j";
