@@ -332,7 +332,11 @@
     margin: 0 0 8px;
   }
   .modal-card p { color: var(--muted); font-size: 0.9rem; margin: 0 0 18px; }
-  .modal-card input[type="text"] {
+  .modal-card label {
+    display: block; font-size: 0.72rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 5px;
+  }
+  .modal-card input {
     width: 100%;
     font-family: var(--sans);
     font-size: 0.95rem;
@@ -357,6 +361,12 @@
   }
   .modal-card button:disabled { opacity: 0.55; cursor: default; }
   .modal-error { color: var(--warning); font-size: 0.82rem; margin: 0 0 12px; }
+  .modal-switch {
+    text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--muted);
+  }
+  .modal-switch button {
+    all: unset; color: var(--accent-2); cursor: pointer; text-decoration: underline;
+  }
 
   .sync-row {
     display: flex; align-items: center; gap: 7px;
@@ -365,6 +375,13 @@
   }
   .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex: 0 0 auto; }
   .sync-dot.off { background: var(--warning); }
+  .whoami-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px 10px; font-size: 0.78rem; color: var(--muted);
+  }
+  .whoami-row button {
+    all: unset; color: var(--accent-2); cursor: pointer; font-size: 0.75rem;
+  }
 </style>
 
 <div class="app">
@@ -373,6 +390,10 @@
     <p class="rail-sub">8 semaines &middot; niveau débutant</p>
     <div id="navList"></div>
     <div class="rail-foot">
+      <div class="whoami-row" id="whoamiRow" style="display:none">
+        <span id="whoamiName"></span>
+        <button id="logoutBtn">Se déconnecter</button>
+      </div>
       <div class="sync-row"><span class="sync-dot off" id="syncDot"></span><span id="syncLabel">Connexion…</span></div>
       <div class="rail-progress-label">
         <span>Progression totale</span>
@@ -542,29 +563,84 @@
     }
   }
 
-  function askName() {
+  function frError(msg) {
+    msg = msg || '';
+    if (/already registered|already exists/i.test(msg)) return 'Cet e-mail a déjà un compte — connecte-toi plutôt.';
+    if (/invalid login credentials/i.test(msg)) return 'E-mail ou mot de passe incorrect.';
+    if (/password.*(least|6)/i.test(msg)) return 'Le mot de passe doit contenir au moins 6 caractères.';
+    if (/valid email/i.test(msg)) return 'Adresse e-mail invalide.';
+    return msg || 'Une erreur est survenue, réessaie.';
+  }
+
+  function showAuthGate() {
     return new Promise(function (resolve) {
       var host = document.getElementById('modalHost');
-      host.innerHTML =
-        '<div class="modal-veil"><div class="modal-card">' +
-          '<h2>Bienvenue dans le carnet de reprise</h2>' +
-          '<p>Indique ton prénom pour que ta progression soit suivie sur le tableau de bord.</p>' +
-          '<p class="modal-error" id="modalError" style="display:none"></p>' +
-          '<input type="text" id="nameInput" placeholder="Ton prénom" autocomplete="off">' +
-          '<button id="nameSubmit">Commencer</button>' +
-        '</div></div>';
-      var input = document.getElementById('nameInput');
-      var err = document.getElementById('modalError');
-      var btn = document.getElementById('nameSubmit');
-      input.focus();
-      function submit() {
-        var v = input.value.trim();
-        if (!v) { err.textContent = 'Merci d’indiquer un prénom.'; err.style.display = 'block'; return; }
-        btn.disabled = true;
-        resolve(v);
+      var mode = 'signup'; // 'signup' | 'signin'
+
+      function paint() {
+        var isSignup = mode === 'signup';
+        host.innerHTML =
+          '<div class="modal-veil"><div class="modal-card">' +
+            '<h2>' + (isSignup ? 'Crée ton compte' : 'Connecte-toi') + '</h2>' +
+            '<p>' + (isSignup
+              ? 'Un compte pour retrouver ta progression sur n’importe quel appareil.'
+              : 'Retrouve ta progression avec ton e-mail et ton mot de passe.') + '</p>' +
+            '<p class="modal-error" id="authError" style="display:none"></p>' +
+            (isSignup ? '<label for="authName">Prénom</label><input type="text" id="authName" autocomplete="given-name">' : '') +
+            '<label for="authEmail">E-mail</label><input type="email" id="authEmail" autocomplete="username">' +
+            '<label for="authPwd">Mot de passe</label><input type="password" id="authPwd" autocomplete="' + (isSignup ? 'new-password' : 'current-password') + '">' +
+            '<button id="authSubmit">' + (isSignup ? 'Créer mon compte' : 'Se connecter') + '</button>' +
+            '<p class="modal-switch">' + (isSignup
+              ? 'Déjà un compte ? <button id="authSwitch">Se connecter</button>'
+              : 'Pas encore de compte ? <button id="authSwitch">En créer un</button>') + '</p>' +
+          '</div></div>';
+
+        document.getElementById('authSwitch').addEventListener('click', function () {
+          mode = isSignup ? 'signin' : 'signup';
+          paint();
+        });
+        document.getElementById('authSubmit').addEventListener('click', submit);
+        document.getElementById('authPwd').addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
       }
-      btn.addEventListener('click', submit);
-      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+
+      async function submit() {
+        var err = document.getElementById('authError');
+        var btn = document.getElementById('authSubmit');
+        var email = document.getElementById('authEmail').value.trim();
+        var pwd = document.getElementById('authPwd').value;
+        var isSignup = mode === 'signup';
+        var name = isSignup ? document.getElementById('authName').value.trim() : null;
+
+        if (isSignup && !name) { err.textContent = 'Merci d’indiquer ton prénom.'; err.style.display = 'block'; return; }
+        if (!email || !pwd) { err.textContent = 'E-mail et mot de passe sont obligatoires.'; err.style.display = 'block'; return; }
+
+        btn.disabled = true;
+        btn.textContent = isSignup ? 'Création…' : 'Connexion…';
+        err.style.display = 'none';
+
+        if (isSignup) {
+          var signUpRes = await sb.auth.signUp({ email: email, password: pwd });
+          if (signUpRes.error || !signUpRes.data.session) {
+            err.textContent = signUpRes.error ? frError(signUpRes.error.message) : 'Confirmation e-mail requise — contacte l’administrateur.';
+            err.style.display = 'block';
+            btn.disabled = false; btn.textContent = 'Créer mon compte';
+            return;
+          }
+          await sb.from('students').insert({ id: signUpRes.data.session.user.id, name: name });
+          resolve();
+        } else {
+          var signInRes = await sb.auth.signInWithPassword({ email: email, password: pwd });
+          if (signInRes.error) {
+            err.textContent = frError(signInRes.error.message);
+            err.style.display = 'block';
+            btn.disabled = false; btn.textContent = 'Se connecter';
+            return;
+          }
+          resolve();
+        }
+      }
+
+      paint();
     });
   }
 
@@ -573,18 +649,24 @@
     var sessionRes = await sb.auth.getSession();
     var session = sessionRes.data.session;
     if (!session) {
-      var signInRes = await sb.auth.signInAnonymously();
-      if (signInRes.error) { setSync(false, 'Connexion impossible'); return; }
-      session = signInRes.data.session;
+      await showAuthGate();
+      document.getElementById('modalHost').innerHTML = '';
+      var sessionRes2 = await sb.auth.getSession();
+      session = sessionRes2.data.session;
     }
     studentId = session.user.id;
 
     var profileRes = await sb.from('students').select('name').eq('id', studentId).maybeSingle();
+    var name = profileRes.data ? profileRes.data.name : (session.user.email || '');
     if (!profileRes.data) {
-      var name = await askName();
-      document.getElementById('modalHost').innerHTML = '';
       await sb.from('students').insert({ id: studentId, name: name });
     }
+    document.getElementById('whoamiRow').style.display = 'flex';
+    document.getElementById('whoamiName').textContent = name;
+    document.getElementById('logoutBtn').addEventListener('click', async function () {
+      await sb.auth.signOut();
+      window.location.reload();
+    });
 
     var progressRes = await sb.from('progress').select('day_key, checked').eq('student_id', studentId);
     (progressRes.data || []).forEach(function (row) {
